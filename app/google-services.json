@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "548556910486",
+    "project_id": "risovalka-e1fd0",
+    "storage_bucket": "risovalka-e1fd0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548556910486:android:c474b1f5700c6678a937b7",
+        "android_client_info": {
+          "package_name": "com.plumsoftware.risovalka"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548556910486-bncpn678goiijb9ts9ssq9kv7oavtj5d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIj_iuGsFYrQS5-qivU6lUw7IvT4SHXCc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548556910486-bncpn678goiijb9ts9ssq9kv7oavtj5d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
