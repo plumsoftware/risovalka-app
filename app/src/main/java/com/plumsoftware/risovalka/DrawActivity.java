@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
@@ -30,10 +31,12 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.kyanogen.signatureview.SignatureView;
-import com.yandex.mobile.ads.banner.AdSize;
 import com.yandex.mobile.ads.banner.BannerAdEventListener;
+import com.yandex.mobile.ads.banner.BannerAdSize;
 import com.yandex.mobile.ads.banner.BannerAdView;
+import com.yandex.mobile.ads.common.AdError;
 import com.yandex.mobile.ads.common.AdRequest;
+import com.yandex.mobile.ads.common.AdRequestConfiguration;
 import com.yandex.mobile.ads.common.AdRequestError;
 import com.yandex.mobile.ads.common.ImpressionData;
 import com.yandex.mobile.ads.common.InitializationListener;
@@ -43,6 +46,8 @@ import com.yandex.mobile.ads.interstitial.InterstitialAdEventListener;
 import com.yandex.mobile.ads.rewarded.Reward;
 import com.yandex.mobile.ads.rewarded.RewardedAd;
 import com.yandex.mobile.ads.rewarded.RewardedAdEventListener;
+import com.yandex.mobile.ads.rewarded.RewardedAdLoadListener;
+import com.yandex.mobile.ads.rewarded.RewardedAdLoader;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,8 +66,15 @@ public class DrawActivity extends AppCompatActivity {
     private String date;
     private int amount;
     private LinearLayout linearLayout;
-    private RewardedAd mRewardedAd;
+    //    private RewardedAd mRewardedAd;
     private FirebaseAnalytics mFirebaseAnalytics;
+
+    @Nullable
+    private RewardedAd mRewardedAd = null;
+    @Nullable
+    private RewardedAdLoader mRewardedAdLoader = null;
+
+    private ProgressDialog progressDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,11 +85,8 @@ public class DrawActivity extends AppCompatActivity {
         defaultColor = ContextCompat.getColor(DrawActivity.this, R.color.black);
 
         //Ads
-        MobileAds.initialize(this, new InitializationListener() {
-            @Override
-            public void onInitializationCompleted() {
+        MobileAds.initialize(this, () -> {
 
-            }
         });
 
         // Obtain the FirebaseAnalytics instance.
@@ -86,10 +95,10 @@ public class DrawActivity extends AppCompatActivity {
         // Создание экземпляра mBannerAdView.
         BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
         mBannerAdView.setAdUnitId("R-M-2522647-1");
-        mBannerAdView.setAdSize(AdSize.flexibleSize(300, 50));
+        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, 300, 50));
 
 
-        ProgressDialog progressDialog = new ProgressDialog(DrawActivity.this);
+        progressDialog = new ProgressDialog(DrawActivity.this);
 
         //progressDialog.showDialog();
         // Создание объекта таргетирования рекламы.
@@ -132,11 +141,69 @@ public class DrawActivity extends AppCompatActivity {
         mBannerAdView.loadAd(adRequest);
 
         //Rewarded
-        mRewardedAd = new RewardedAd(this);
-        mRewardedAd.setAdUnitId("R-M-2522647-3");
+        mRewardedAdLoader = new RewardedAdLoader(DrawActivity.this);
+
+        mRewardedAdLoader.setAdLoadListener(new RewardedAdLoadListener() {
+            @Override
+            public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
+                mRewardedAd = rewardedAd;
+                progressDialog.dismiss();
+
+                mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
+                    @Override
+                    public void onAdShown() {
+
+                    }
+
+                    @Override
+                    public void onAdFailedToShow(@NonNull AdError adError) {
+
+                    }
+
+                    @Override
+                    public void onAdDismissed() {
+
+                    }
+
+                    @Override
+                    public void onAdClicked() {
+
+                    }
+
+                    @Override
+                    public void onAdImpression(@Nullable ImpressionData impressionData) {
+
+                    }
+
+                    @Override
+                    public void onRewarded(@NonNull Reward reward) {
+//                            if (!signatureView.isBitmapEmpty()) {
+                        try {
+                            saveImage(signatureView.getSignatureBitmap(), date);
+                            Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
+                        }
+//                            }
+                    }
+                });
+
+                mRewardedAd.show(DrawActivity.this);
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
+                progressDialog.dismiss();
+                Toast.makeText(DrawActivity.this, "Не удалось загрузить реакламу:(\nПопробуйте позже", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+//        mRewardedAd = new RewardedAd(this);
+//        mRewardedAd.setAdUnitId("R-M-2522647-3");
 
         // Создание объекта таргетирования рекламы.
-        final AdRequest adRequestR = new AdRequest.Builder().build();
+//        final AdRequest adRequestR = new AdRequest.Builder().build();
 
         //File name
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
@@ -201,101 +268,8 @@ public class DrawActivity extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                amount = 0;
+                askPermissions();
                 progressDialog.showDialog();
-                //Ads
-                // Регистрация слушателя для отслеживания событий, происходящих в рекламе.
-                mRewardedAd.setRewardedAdEventListener(new RewardedAdEventListener() {
-                    @Override
-                    public void onRewarded(@NonNull final Reward reward) {
-                        amount = reward.getAmount();
-
-                        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            if (!signatureView.isBitmapEmpty()) {
-                                try {
-                                    saveImage(signatureView.getSignatureBitmap(), date);
-                                    Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
-                                }
-                            }
-                        } else
-                            askPermissions();
-                    }
-
-                    @Override
-                    public void onAdClicked() {
-
-                    }
-
-                    @Override
-                    public void onAdLoaded() {
-                        progressDialog.dismiss();
-                        mRewardedAd.show();
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                        progressDialog.dismiss();
-                        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            if (!signatureView.isBitmapEmpty()) {
-                                try {
-                                    saveImage(signatureView.getSignatureBitmap(), date);
-                                    Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
-                                }
-                            }
-                        } else
-                            askPermissions();
-                    }
-
-                    @Override
-                    public void onAdShown() {
-
-                    }
-
-                    @SuppressLint({"ObsoleteSdkInt", "ShowToast"})
-                    @Override
-                    public void onAdDismissed() {
-                        if (amount != 0) {
-                            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                if (!signatureView.isBitmapEmpty()) {
-                                    try {
-                                        saveImage(signatureView.getSignatureBitmap(), date);
-                                        Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#089303")).show();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#9F0505")).show();
-                                    }
-                                }
-                            } else
-                                askPermissions();
-                        }
-
-                        Snackbar.make(linearLayout, "Не удалось сохранить изображение", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D"));
-                    }
-
-                    @Override
-                    public void onLeftApplication() {
-                        progressDialog.dismiss();
-                    }
-
-                    @Override
-                    public void onReturnedToApplication() {
-
-                    }
-
-                    @Override
-                    public void onImpression(@Nullable ImpressionData impressionData) {
-
-                    }
-                });
-
-                // Загрузка объявления.
-                mRewardedAd.loadAd(adRequestR);
             }
         });
     }
@@ -307,14 +281,20 @@ public class DrawActivity extends AppCompatActivity {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
                         //Ads
-                        if (!signatureView.isBitmapEmpty()) {
-                            try {
-                                saveImage(signatureView.getSignatureBitmap(), date);
-                                Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#089303")).show();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#9F0505")).show();
-                            }
+//                        if (!signatureView.isBitmapEmpty()) {
+//                            try {
+//                                saveImage(signatureView.getSignatureBitmap(), date);
+//                                Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#089303")).show();
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                                Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#9F0505")).show();
+//                            }
+//                        }
+
+                        if (mRewardedAdLoader != null) {
+                            final AdRequestConfiguration adRequestConfiguration =
+                                    new AdRequestConfiguration.Builder("R-M-2522647-3").build();
+                            mRewardedAdLoader.loadAd(adRequestConfiguration);
                         }
                     }
 

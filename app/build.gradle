@@ -8,10 +8,10 @@ android {
 
     defaultConfig {
         applicationId "com.plumsoftware.risovalka"
-        minSdk 24
+        minSdk 26
         targetSdk 33
-        versionCode 11
-        versionName "1.9.2"
+        versionCode 12
+        versionName "2.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -35,7 +35,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.firebase:firebase-analytics:21.3.0'
-    implementation 'com.google.firebase:firebase-messaging:23.2.0'
+    implementation 'com.google.firebase:firebase-messaging:23.2.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -54,11 +54,11 @@ dependencies {
     //implementation 'com.google.android.gms:play-services-ads:21.4.0'
 
     //Glide
-    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:5.9.0'
+    implementation 'com.yandex.android:mobileads:6.0.0'
     implementation 'com.yandex.ads.mediation:mobileads-mytarget:5.16.2.0'
     implementation 'com.yandex.ads.mediation:mobileads-admob:21.3.0.0'
 }
