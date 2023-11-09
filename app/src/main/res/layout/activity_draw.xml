@@ -132,7 +132,7 @@
             android:layout_weight="1"
             android:background="@drawable/click"
             android:padding="4dp"
-            app:srcCompat="@drawable/ic_save_alt" />
+            app:srcCompat="@drawable/ic_save" />
     </LinearLayout>
 
     <LinearLayout

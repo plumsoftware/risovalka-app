@@ -3,4 +3,6 @@
     <string name="application_id">ca-app-pub-1248787092735969~3686308692</string>
     <string name="banner_id">ca-app-pub-1248787092735969/1421794355</string>
     <string name="interstitial_id">ca-app-pub-1248787092735969/9682879010</string>
+
+    <string name="loading_ads_hint">Загрузка рекламы через 5...</string>
 </resources>

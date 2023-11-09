@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -83,6 +84,9 @@ public class DrawActivity extends AppCompatActivity {
 
         //Data
         defaultColor = ContextCompat.getColor(DrawActivity.this, R.color.black);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;
 
         //Ads
         MobileAds.initialize(this, () -> {
@@ -95,7 +99,7 @@ public class DrawActivity extends AppCompatActivity {
         // Создание экземпляра mBannerAdView.
         BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
         mBannerAdView.setAdUnitId("R-M-2522647-1");
-        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, 300, 50));
+        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, 70));
 
 
         progressDialog = new ProgressDialog(DrawActivity.this);

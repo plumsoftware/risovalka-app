@@ -10,8 +10,8 @@ android {
         applicationId "com.plumsoftware.risovalka"
         minSdk 26
         targetSdk 33
-        versionCode 12
-        versionName "2.0.0"
+        versionCode 13
+        versionName "2.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -134,7 +134,7 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:6.0.0'
+    implementation 'com.yandex.android:mobileads:6.1.0'
     implementation 'com.yandex.ads.mediation:mobileads-mytarget:5.16.2.0'
     implementation 'com.yandex.ads.mediation:mobileads-admob:21.3.0.0'
 }
