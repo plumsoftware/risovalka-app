@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_text_dark">#FFFFFF</color>
+    <color name="secondary_text_dark">#DEDEDE</color>
+    <color name="gray_dark">#333333</color>
+    <color name="blue_dark_dark">#0033CC</color>
+    <color name="success_dark">#00FF00</color>
+    <color name="info_dark">#00FFFF</color>
+    <color name="warning_dark">#FFA500</color>
+    <color name="danger_dark">#FF0000</color>
+    <color name="dark_gray_dark">#666666</color>
+</resources>
