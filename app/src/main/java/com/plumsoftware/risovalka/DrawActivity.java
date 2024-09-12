@@ -23,6 +23,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.karumi.dexter.Dexter;
@@ -31,7 +32,6 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
-import com.kyanogen.signatureview.SignatureView;
 import com.yandex.mobile.ads.banner.BannerAdEventListener;
 import com.yandex.mobile.ads.banner.BannerAdSize;
 import com.yandex.mobile.ads.banner.BannerAdView;
@@ -63,7 +63,7 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 public class DrawActivity extends AppCompatActivity {
     private int defaultColor;
     private final File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Рисовалка");
-    private SignatureView signatureView;
+    private SignaturePad signatureView;
     private String date;
     private int amount;
     private LinearLayout linearLayout;
@@ -225,7 +225,7 @@ public class DrawActivity extends AppCompatActivity {
         ImageView paint = (ImageView) findViewById(R.id.imageView);
         final TextView size = (TextView) findViewById(R.id.textView);
         SeekBar paintSize = (SeekBar) findViewById(R.id.seekBar);
-        signatureView = (SignatureView) findViewById(R.id.signatureView);
+        signatureView = (SignaturePad) findViewById(R.id.signatureView);
 
         //Clickers
         paintPicker.setOnClickListener(new View.OnClickListener() {
@@ -247,7 +247,7 @@ public class DrawActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 size.setText(Integer.toString(progress));
-                signatureView.setPenSize(progress);
+                signatureView.setMaxWidth(progress);
             }
 
             @SuppressLint("SetTextI18n")
@@ -265,7 +265,7 @@ public class DrawActivity extends AppCompatActivity {
         rubber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                signatureView.clearCanvas();
+                signatureView.clear();
             }
         });
 
@@ -315,7 +315,7 @@ public class DrawActivity extends AppCompatActivity {
                 .check();
     }
 
-    private void openColorPicker(SignatureView signatureView) {
+    private void openColorPicker(SignaturePad signatureView) {
         AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(DrawActivity.this,
                 ContextCompat.getColor(DrawActivity.this, R.color.white),
                 new AmbilWarnaDialog.OnAmbilWarnaListener() {
