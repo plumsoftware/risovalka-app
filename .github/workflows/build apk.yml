@@ -1,0 +1,24 @@
+name: Generated APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+          cache: gradle
+      - name: Build gradle project
+        run: ./gradlew androidApp:build
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsTemplate.apk
+          path: androidApp/build/outputs/apk/debug/app-debug.apk
