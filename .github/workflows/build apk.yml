@@ -1,6 +1,6 @@
 name: Generated APK
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -15,6 +15,8 @@ jobs:
           distribution: zulu
           java-version: 21
           cache: gradle
+      - name: Run chmod
+        run: chmod +x ./gradlew
       - name: Build gradle project
         run: ./gradlew androidApp:build
       - name: Upload a Build Artifact
