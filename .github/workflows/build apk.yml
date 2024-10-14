@@ -1,0 +1,21 @@
+name: Generated APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+          cache: gradle
+      - name: Run chmod
+        run: chmod +x ./gradlew
+      - name: Build gradle project
+        run: ./gradlew app:build
