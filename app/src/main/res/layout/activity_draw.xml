@@ -148,7 +148,7 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_gravity="center"
-            android:gravity="center"></com.yandex.mobile.ads.banner.BannerAdView>
+            android:gravity="center" />
 
     </LinearLayout>
 
