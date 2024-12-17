@@ -77,6 +77,8 @@ public class DrawActivity extends AppCompatActivity {
 
     private ProgressDialog progressDialog = null;
 
+    private final double TABLET_SCREEN_SIZE_THRESHOLD = 7.0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +89,17 @@ public class DrawActivity extends AppCompatActivity {
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int screenWidth = displayMetrics.widthPixels;
+        int screenHeight = displayMetrics.heightPixels;
+
+        double screenInches = Math.sqrt(Math.pow(screenWidth / displayMetrics.xdpi, 2) +
+                Math.pow(screenHeight / displayMetrics.ydpi, 2));
+
+        int bannerHeight;
+        if (screenInches >= TABLET_SCREEN_SIZE_THRESHOLD) {
+            bannerHeight = (int) (screenHeight * 0.08);
+        } else {
+            bannerHeight = (int) (screenHeight * 0.036);
+        }
 
         //Ads
         MobileAds.initialize(this, () -> {
@@ -99,7 +112,7 @@ public class DrawActivity extends AppCompatActivity {
         // Создание экземпляра mBannerAdView.
         BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
         mBannerAdView.setAdUnitId("R-M-2522647-1");
-        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, 70));
+        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
 
 
         progressDialog = new ProgressDialog(DrawActivity.this);
