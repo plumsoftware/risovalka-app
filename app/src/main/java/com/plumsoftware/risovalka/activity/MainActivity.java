@@ -1,14 +1,15 @@
-package com.plumsoftware.risovalka;
+package com.plumsoftware.risovalka.activity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+import com.plumsoftware.risovalka.R;
+import com.plumsoftware.risovalka.ads.AdsConfig;
 import com.yandex.mobile.ads.appopenad.AppOpenAd;
 import com.yandex.mobile.ads.appopenad.AppOpenAdEventListener;
 import com.yandex.mobile.ads.appopenad.AppOpenAdLoadListener;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         final AppOpenAdLoader appOpenAdLoader = new AppOpenAdLoader(this);
-        final String AD_UNIT_ID = "R-M-2522647-4";
+        final String AD_UNIT_ID = AdsConfig.openAdsId;
         final AdRequestConfiguration adRequestConfiguration = new AdRequestConfiguration.Builder(AD_UNIT_ID).build();
 
         AppOpenAdEventListener appOpenAdEventListener = new AppOpenAdEventListener() {
