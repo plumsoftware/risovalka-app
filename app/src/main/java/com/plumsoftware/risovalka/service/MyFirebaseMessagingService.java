@@ -1,4 +1,4 @@
-package com.plumsoftware.risovalka;
+package com.plumsoftware.risovalka.service;
 
 import android.annotation.SuppressLint;
 import android.util.Log;

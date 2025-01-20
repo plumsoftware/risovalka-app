@@ -7,20 +7,42 @@ android {
     compileSdk 35
     namespace 'com.plumsoftware.risovalka'
 
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file("local.properties")
+
+    if (localPropertiesFile.exists()) {
+        localProperties.load(new FileInputStream(localPropertiesFile))
+    }
+
+    def mainBannerAdsId = localProperties.getProperty("mainScreenBannerAdsId")
+    def openAdsId = localProperties.getProperty("openAdsId")
+    def interstitialAdsId = localProperties.getProperty("interstitialAdsId")
+    def rewardedAdsId = localProperties.getProperty("rewardedAdsId")
+
     defaultConfig {
         applicationId "com.plumsoftware.risovalka"
         minSdk 25
         targetSdk 35
-        versionCode 21
-        versionName "3.0.3"
+        versionCode 22
+        versionName "3.0.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "mainScreenBannerAdsId", "\"${mainBannerAdsId}\""
+        buildConfigField "String", "openAdsId", "\"${openAdsId}\""
+        buildConfigField "String", "interstitialAdsId", "\"${interstitialAdsId}\""
+        buildConfigField "String", "rewardedAdsId", "\"${rewardedAdsId}\""
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            buildConfigField "String", "mainScreenBannerAdsId", "\"${mainBannerAdsId}\""
+            buildConfigField "String", "openAdsId", "\"${openAdsId}\""
+            buildConfigField "String", "interstitialAdsId", "\"${interstitialAdsId}\""
+            buildConfigField "String", "rewardedAdsId", "\"${rewardedAdsId}\""
         }
     }
     compileOptions {
@@ -31,6 +53,10 @@ android {
     lint {
         abortOnError false
     }
+
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
@@ -38,7 +64,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'com.google.firebase:firebase-analytics:22.1.2'
+    implementation 'com.google.firebase:firebase-analytics:22.2.0'
     implementation 'com.google.firebase:firebase-messaging:24.1.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
@@ -63,5 +89,5 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:7.8.0'
+    implementation 'com.yandex.android:mobileads:7.9.0'
 }

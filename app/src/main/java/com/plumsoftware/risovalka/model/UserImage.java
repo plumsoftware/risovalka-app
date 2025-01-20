@@ -1,4 +1,4 @@
-package com.plumsoftware.risovalka;
+package com.plumsoftware.risovalka.model;
 
 public class UserImage {
     private String path;

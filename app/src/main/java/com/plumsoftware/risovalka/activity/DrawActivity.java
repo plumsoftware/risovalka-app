@@ -1,4 +1,4 @@
-package com.plumsoftware.risovalka;
+package com.plumsoftware.risovalka.activity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -9,9 +9,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -32,6 +30,9 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.plumsoftware.risovalka.ads.AdsConfig;
+import com.plumsoftware.risovalka.dialog.ProgressDialog;
+import com.plumsoftware.risovalka.R;
 import com.yandex.mobile.ads.banner.BannerAdEventListener;
 import com.yandex.mobile.ads.banner.BannerAdSize;
 import com.yandex.mobile.ads.banner.BannerAdView;
@@ -40,10 +41,7 @@ import com.yandex.mobile.ads.common.AdRequest;
 import com.yandex.mobile.ads.common.AdRequestConfiguration;
 import com.yandex.mobile.ads.common.AdRequestError;
 import com.yandex.mobile.ads.common.ImpressionData;
-import com.yandex.mobile.ads.common.InitializationListener;
 import com.yandex.mobile.ads.common.MobileAds;
-import com.yandex.mobile.ads.interstitial.InterstitialAd;
-import com.yandex.mobile.ads.interstitial.InterstitialAdEventListener;
 import com.yandex.mobile.ads.rewarded.Reward;
 import com.yandex.mobile.ads.rewarded.RewardedAd;
 import com.yandex.mobile.ads.rewarded.RewardedAdEventListener;
@@ -111,7 +109,7 @@ public class DrawActivity extends AppCompatActivity {
 
         // Создание экземпляра mBannerAdView.
         BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
-        mBannerAdView.setAdUnitId("R-M-2522647-1");
+        mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId);
         mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
 
 
@@ -310,7 +308,7 @@ public class DrawActivity extends AppCompatActivity {
 
                         if (mRewardedAdLoader != null) {
                             final AdRequestConfiguration adRequestConfiguration =
-                                    new AdRequestConfiguration.Builder("R-M-2522647-3").build();
+                                    new AdRequestConfiguration.Builder(AdsConfig.rewardedAdsId).build();
                             mRewardedAdLoader.loadAd(adRequestConfiguration);
                         }
                     }
@@ -369,5 +367,4 @@ public class DrawActivity extends AppCompatActivity {
         fileOutputStream.flush();
         fileOutputStream.close();
     }
-
 }

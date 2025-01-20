@@ -7,9 +7,12 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
 
     <application
         android:allowBackup="true"
@@ -19,17 +22,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Рисовалка">
         <activity
-            android:name=".ImageViewer"
-            android:exported="true" />
+            android:name=".activity.DrawActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".DrawActivity"
-            android:exported="true" />
-        <activity
-            android:name=".PreviewActivity"
-            android:exported="true" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".activity.MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,7 +39,7 @@
         </activity>
 
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name=".service.MyFirebaseMessagingService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -48,9 +49,6 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="@string/application_id" />
     </application>
 
 </manifest>

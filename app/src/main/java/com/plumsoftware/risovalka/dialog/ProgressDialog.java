@@ -1,4 +1,4 @@
-package com.plumsoftware.risovalka;
+package com.plumsoftware.risovalka.dialog;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -8,6 +8,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+
+import com.plumsoftware.risovalka.R;
 
 public class ProgressDialog {
     private Dialog dialog;
