@@ -23,8 +23,8 @@ android {
         applicationId "com.plumsoftware.risovalka"
         minSdk 25
         targetSdk 35
-        versionCode 22
-        versionName "3.0.5"
+        versionCode 23
+        versionName "3.0.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -38,11 +38,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
-            buildConfigField "String", "mainScreenBannerAdsId", "\"${mainBannerAdsId}\""
-            buildConfigField "String", "openAdsId", "\"${openAdsId}\""
-            buildConfigField "String", "interstitialAdsId", "\"${interstitialAdsId}\""
-            buildConfigField "String", "rewardedAdsId", "\"${rewardedAdsId}\""
         }
     }
     compileOptions {

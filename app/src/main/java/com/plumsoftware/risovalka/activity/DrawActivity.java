@@ -65,7 +65,6 @@ public class DrawActivity extends AppCompatActivity {
     private String date;
     private int amount;
     private LinearLayout linearLayout;
-    //    private RewardedAd mRewardedAd;
     private FirebaseAnalytics mFirebaseAnalytics;
 
     @Nullable
@@ -214,12 +213,6 @@ public class DrawActivity extends AppCompatActivity {
             }
         });
 
-//        mRewardedAd = new RewardedAd(this);
-//        mRewardedAd.setAdUnitId("R-M-2522647-3");
-
-        // Создание объекта таргетирования рекламы.
-//        final AdRequest adRequestR = new AdRequest.Builder().build();
-
         //File name
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         date = simpleDateFormat.format(new Date());
@@ -283,8 +276,13 @@ public class DrawActivity extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                askPermissions();
-                progressDialog.showDialog();
+
+                if (!signatureView.isEmpty()) {
+                    askPermissions();
+                    progressDialog.showDialog();
+                } else {
+                    Toast.makeText(DrawActivity.this, "Не возможно сохранить пустой холст.", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -295,17 +293,6 @@ public class DrawActivity extends AppCompatActivity {
                 .withListener(new PermissionListener() {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
-                        //Ads
-//                        if (!signatureView.isBitmapEmpty()) {
-//                            try {
-//                                saveImage(signatureView.getSignatureBitmap(), date);
-//                                Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#089303")).show();
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                                Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#9F0505")).show();
-//                            }
-//                        }
-
                         if (mRewardedAdLoader != null) {
                             final AdRequestConfiguration adRequestConfiguration =
                                     new AdRequestConfiguration.Builder(AdsConfig.rewardedAdsId).build();
