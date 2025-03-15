@@ -23,8 +23,8 @@ android {
         applicationId "com.plumsoftware.risovalka"
         minSdk 25
         targetSdk 35
-        versionCode 23
-        versionName "3.0.6"
+        versionCode 24
+        versionName "3.0.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -58,8 +58,8 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'com.google.firebase:firebase-analytics:22.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'com.google.firebase:firebase-analytics:22.3.0'
     implementation 'com.google.firebase:firebase-messaging:24.1.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
@@ -84,5 +84,5 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:7.9.0'
+    implementation 'com.yandex.android:mobileads:7.11.0'
 }
