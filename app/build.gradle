@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    compileSdk 35
+    compileSdk 36
     namespace 'com.plumsoftware.risovalka'
 
     def localProperties = new Properties()
@@ -22,9 +22,9 @@ android {
     defaultConfig {
         applicationId "com.plumsoftware.risovalka"
         minSdk 25
-        targetSdk 35
-        versionCode 24
-        versionName "3.0.7"
+        targetSdk 36
+        versionCode 25
+        versionName "3.0.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -84,5 +84,5 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:7.11.0'
+    implementation 'com.yandex.android:mobileads:7.13.0'
 }
