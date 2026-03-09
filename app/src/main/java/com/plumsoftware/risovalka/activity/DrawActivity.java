@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -81,6 +84,21 @@ public class DrawActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw);
 
+        linearLayout = (LinearLayout) findViewById(R.id.linearLayout);
+
+        ViewCompat.setOnApplyWindowInsetsListener(linearLayout, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    v.getPaddingTop(),
+                    v.getPaddingRight(),
+                    systemBars.bottom
+            );
+
+            return insets;
+        });
+
         //Data
         defaultColor = ContextCompat.getColor(DrawActivity.this, R.color.black);
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -100,118 +118,117 @@ public class DrawActivity extends AppCompatActivity {
 
         //Ads
         MobileAds.initialize(this, () -> {
+            // Создание экземпляра mBannerAdView.
+            BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
+            mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId);
+            mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
 
+            // Создание объекта таргетирования рекламы.
+            final AdRequest adRequest = new AdRequest.Builder().build();
+
+            // Регистрация слушателя для отслеживания событий, происходящих в баннерной рекламе.
+            mBannerAdView.setBannerAdEventListener(new BannerAdEventListener() {
+                @Override
+                public void onAdLoaded() {
+                    //progressDialog.dismiss();
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull AdRequestError adRequestError) {
+                    //progressDialog.dismiss();
+                }
+
+                @Override
+                public void onAdClicked() {
+
+                }
+
+                @Override
+                public void onLeftApplication() {
+                    //progressDialog.dismiss();
+                }
+
+                @Override
+                public void onReturnedToApplication() {
+
+                }
+
+                @Override
+                public void onImpression(@Nullable ImpressionData impressionData) {
+
+                }
+            });
+
+            // Загрузка объявления.
+            mBannerAdView.loadAd(adRequest);
+
+            //Rewarded
+            mRewardedAdLoader = new RewardedAdLoader(DrawActivity.this);
+
+            mRewardedAdLoader.setAdLoadListener(new RewardedAdLoadListener() {
+                @Override
+                public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
+                    mRewardedAd = rewardedAd;
+                    progressDialog.dismiss();
+
+                    mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
+                        @Override
+                        public void onAdShown() {
+
+                        }
+
+                        @Override
+                        public void onAdFailedToShow(@NonNull AdError adError) {
+
+                        }
+
+                        @Override
+                        public void onAdDismissed() {
+
+                        }
+
+                        @Override
+                        public void onAdClicked() {
+
+                        }
+
+                        @Override
+                        public void onAdImpression(@Nullable ImpressionData impressionData) {
+
+                        }
+
+                        @Override
+                        public void onRewarded(@NonNull Reward reward) {
+//                            if (!signatureView.isBitmapEmpty()) {
+                            try {
+                                saveImage(signatureView.getSignatureBitmap(), date);
+                                Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
+                            }
+//                            }
+                        }
+                    });
+
+                    mRewardedAd.show(DrawActivity.this);
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
+                    progressDialog.dismiss();
+                    Toast.makeText(DrawActivity.this, "Не удалось загрузить реакламу:(\nПопробуйте позже", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
-        // Создание экземпляра mBannerAdView.
-        BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
-        mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId);
-        mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
-
 
         progressDialog = new ProgressDialog(DrawActivity.this);
 
         //progressDialog.showDialog();
-        // Создание объекта таргетирования рекламы.
-        final AdRequest adRequest = new AdRequest.Builder().build();
-
-        // Регистрация слушателя для отслеживания событий, происходящих в баннерной рекламе.
-        mBannerAdView.setBannerAdEventListener(new BannerAdEventListener() {
-            @Override
-            public void onAdLoaded() {
-                //progressDialog.dismiss();
-            }
-
-            @Override
-            public void onAdFailedToLoad(@NonNull AdRequestError adRequestError) {
-                //progressDialog.dismiss();
-            }
-
-            @Override
-            public void onAdClicked() {
-
-            }
-
-            @Override
-            public void onLeftApplication() {
-                //progressDialog.dismiss();
-            }
-
-            @Override
-            public void onReturnedToApplication() {
-
-            }
-
-            @Override
-            public void onImpression(@Nullable ImpressionData impressionData) {
-
-            }
-        });
-
-        // Загрузка объявления.
-        mBannerAdView.loadAd(adRequest);
-
-        //Rewarded
-        mRewardedAdLoader = new RewardedAdLoader(DrawActivity.this);
-
-        mRewardedAdLoader.setAdLoadListener(new RewardedAdLoadListener() {
-            @Override
-            public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
-                mRewardedAd = rewardedAd;
-                progressDialog.dismiss();
-
-                mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
-                    @Override
-                    public void onAdShown() {
-
-                    }
-
-                    @Override
-                    public void onAdFailedToShow(@NonNull AdError adError) {
-
-                    }
-
-                    @Override
-                    public void onAdDismissed() {
-
-                    }
-
-                    @Override
-                    public void onAdClicked() {
-
-                    }
-
-                    @Override
-                    public void onAdImpression(@Nullable ImpressionData impressionData) {
-
-                    }
-
-                    @Override
-                    public void onRewarded(@NonNull Reward reward) {
-//                            if (!signatureView.isBitmapEmpty()) {
-                        try {
-                            saveImage(signatureView.getSignatureBitmap(), date);
-                            Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
-                        }
-//                            }
-                    }
-                });
-
-                mRewardedAd.show(DrawActivity.this);
-            }
-
-            @Override
-            public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                progressDialog.dismiss();
-                Toast.makeText(DrawActivity.this, "Не удалось загрузить реакламу:(\nПопробуйте позже", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         //File name
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
@@ -225,7 +242,6 @@ public class DrawActivity extends AppCompatActivity {
         ImageButton paintPicker = (ImageButton) findViewById(R.id.imageButton2);
         ImageButton save = (ImageButton) findViewById(R.id.save);
         ImageButton back = (ImageButton) findViewById(R.id.back);
-        linearLayout = (LinearLayout) findViewById(R.id.linearLayout);
         ImageView paint = (ImageView) findViewById(R.id.imageView);
         final TextView size = (TextView) findViewById(R.id.textView);
         SeekBar paintSize = (SeekBar) findViewById(R.id.seekBar);
