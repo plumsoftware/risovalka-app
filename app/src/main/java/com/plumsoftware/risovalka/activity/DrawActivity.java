@@ -10,10 +10,17 @@ import androidx.core.view.WindowInsetsCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -54,6 +61,7 @@ import com.yandex.mobile.ads.rewarded.RewardedAdLoader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,7 +74,6 @@ public class DrawActivity extends AppCompatActivity {
     private final File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Рисовалка");
     private SignaturePad signatureView;
     private String date;
-    private int amount;
     private LinearLayout linearLayout;
     private FirebaseAnalytics mFirebaseAnalytics;
 
@@ -84,18 +91,11 @@ public class DrawActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw);
 
-        linearLayout = (LinearLayout) findViewById(R.id.linearLayout);
+        linearLayout = findViewById(R.id.linearLayout);
 
         ViewCompat.setOnApplyWindowInsetsListener(linearLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            v.setPadding(
-                    v.getPaddingLeft(),
-                    v.getPaddingTop(),
-                    v.getPaddingRight(),
-                    systemBars.bottom
-            );
-
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), systemBars.bottom);
             return insets;
         });
 
@@ -109,105 +109,51 @@ public class DrawActivity extends AppCompatActivity {
         double screenInches = Math.sqrt(Math.pow(screenWidth / displayMetrics.xdpi, 2) +
                 Math.pow(screenHeight / displayMetrics.ydpi, 2));
 
-        int bannerHeight;
-        if (screenInches >= TABLET_SCREEN_SIZE_THRESHOLD) {
-            bannerHeight = (int) (screenHeight * 0.08);
-        } else {
-            bannerHeight = (int) (screenHeight * 0.036);
-        }
+        int bannerHeight = (screenInches >= TABLET_SCREEN_SIZE_THRESHOLD) ?
+                (int) (screenHeight * 0.08) : (int) (screenHeight * 0.036);
+
+        // Инициализация диалога загрузки
+        progressDialog = new ProgressDialog(DrawActivity.this);
 
         //Ads
         MobileAds.initialize(this, () -> {
-            // Создание экземпляра mBannerAdView.
-            BannerAdView mBannerAdView = (BannerAdView) findViewById(R.id.adView);
-            mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId);
+            BannerAdView mBannerAdView = findViewById(R.id.adView);
+            mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId); // Убедитесь, что AdsConfig берется правильно
             mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
 
-            // Создание объекта таргетирования рекламы.
             final AdRequest adRequest = new AdRequest.Builder().build();
-
-            // Регистрация слушателя для отслеживания событий, происходящих в баннерной рекламе.
             mBannerAdView.setBannerAdEventListener(new BannerAdEventListener() {
-                @Override
-                public void onAdLoaded() {
-                    //progressDialog.dismiss();
-                }
-
-                @Override
-                public void onAdFailedToLoad(@NonNull AdRequestError adRequestError) {
-                    //progressDialog.dismiss();
-                }
-
-                @Override
-                public void onAdClicked() {
-
-                }
-
-                @Override
-                public void onLeftApplication() {
-                    //progressDialog.dismiss();
-                }
-
-                @Override
-                public void onReturnedToApplication() {
-
-                }
-
-                @Override
-                public void onImpression(@Nullable ImpressionData impressionData) {
-
-                }
+                @Override public void onAdLoaded() {}
+                @Override public void onAdFailedToLoad(@NonNull AdRequestError error) {}
+                @Override public void onAdClicked() {}
+                @Override public void onLeftApplication() {}
+                @Override public void onReturnedToApplication() {}
+                @Override public void onImpression(@Nullable ImpressionData data) {}
             });
-
-            // Загрузка объявления.
             mBannerAdView.loadAd(adRequest);
 
-            //Rewarded
+            //Rewarded Loader
             mRewardedAdLoader = new RewardedAdLoader(DrawActivity.this);
-
             mRewardedAdLoader.setAdLoadListener(new RewardedAdLoadListener() {
                 @Override
                 public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
                     mRewardedAd = rewardedAd;
-                    progressDialog.dismiss();
+                    if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
 
                     mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
-                        @Override
-                        public void onAdShown() {
-
-                        }
-
+                        @Override public void onAdShown() {}
                         @Override
                         public void onAdFailedToShow(@NonNull AdError adError) {
-
+                            if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
+                            saveDrawing();
                         }
-
                         @Override
-                        public void onAdDismissed() {
-
-                        }
-
-                        @Override
-                        public void onAdClicked() {
-
-                        }
-
-                        @Override
-                        public void onAdImpression(@Nullable ImpressionData impressionData) {
-
-                        }
-
+                        public void onAdDismissed() {}
+                        @Override public void onAdClicked() {}
+                        @Override public void onAdImpression(@Nullable ImpressionData impressionData) {}
                         @Override
                         public void onRewarded(@NonNull Reward reward) {
-//                            if (!signatureView.isBitmapEmpty()) {
-                            try {
-                                saveImage(signatureView.getSignatureBitmap(), date);
-                                Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(Color.parseColor("#95D61D")).show();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                Snackbar.make(linearLayout, e.toString(), Snackbar.LENGTH_SHORT).setTextColor(Color.WHITE).setBackgroundTint(getColor(R.color.warning)).show();
-                            }
-//                            }
+                            saveDrawing();
                         }
                     });
 
@@ -216,51 +162,27 @@ public class DrawActivity extends AppCompatActivity {
 
                 @Override
                 public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                    progressDialog.dismiss();
-                    Toast.makeText(DrawActivity.this, "Не удалось загрузить реакламу:(\nПопробуйте позже", Toast.LENGTH_SHORT).show();
+                    if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
+                    saveDrawing(); // Сохраняем без рекламы, если не загрузилась
                 }
             });
         });
 
-        // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
+        // FVBI
+        ImageButton rubber = findViewById(R.id.imageButton);
+        ImageButton paintPicker = findViewById(R.id.imageButton2);
+        ImageButton save = findViewById(R.id.save);
+        ImageButton back = findViewById(R.id.back);
+        final TextView size = findViewById(R.id.textView);
+        SeekBar paintSize = findViewById(R.id.seekBar);
+        signatureView = findViewById(R.id.signatureView);
+        signatureView.setSaveEnabled(false);
 
-        progressDialog = new ProgressDialog(DrawActivity.this);
-
-        //progressDialog.showDialog();
-
-        //File name
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-        date = simpleDateFormat.format(new Date());
-
-        //File
-        String fileName = path + "/" + date + ".png";
-
-        //FVBI
-        ImageButton rubber = (ImageButton) findViewById(R.id.imageButton);
-        ImageButton paintPicker = (ImageButton) findViewById(R.id.imageButton2);
-        ImageButton save = (ImageButton) findViewById(R.id.save);
-        ImageButton back = (ImageButton) findViewById(R.id.back);
-        ImageView paint = (ImageView) findViewById(R.id.imageView);
-        final TextView size = (TextView) findViewById(R.id.textView);
-        SeekBar paintSize = (SeekBar) findViewById(R.id.seekBar);
-        signatureView = (SignaturePad) findViewById(R.id.signatureView);
-
-        //Clickers
-        paintPicker.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openColorPicker(signatureView);
-            }
-        });
-
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        paintPicker.setOnClickListener(view -> openColorPicker(signatureView));
+        back.setOnClickListener(v -> finish());
+        rubber.setOnClickListener(view -> signatureView.clear());
 
         paintSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @SuppressLint("SetTextI18n")
@@ -269,38 +191,43 @@ public class DrawActivity extends AppCompatActivity {
                 size.setText(Integer.toString(progress));
                 signatureView.setMaxWidth(progress);
             }
-
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        rubber.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signatureView.clear();
-            }
-        });
+        save.setOnClickListener(view -> {
+            if (!signatureView.isEmpty()) {
+                // Обновляем имя файла прямо перед сохранением
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+                date = simpleDateFormat.format(new Date());
 
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (!signatureView.isEmpty()) {
-                    askPermissions();
-                    progressDialog.showDialog();
+                // На Android 10+ (API 29+) WRITE_EXTERNAL_STORAGE не нужен для записи в Галерею
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startAdAndSaveFlow();
                 } else {
-                    Toast.makeText(DrawActivity.this, "Не возможно сохранить пустой холст.", Toast.LENGTH_LONG).show();
+                    // Для старых версий запрашиваем разрешение
+                    if (ContextCompat.checkSelfPermission(DrawActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        startAdAndSaveFlow();
+                    } else {
+                        askPermissions();
+                    }
                 }
+            } else {
+                Toast.makeText(DrawActivity.this, "Невозможно сохранить пустой холст.", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void startAdAndSaveFlow() {
+        if (mRewardedAdLoader != null) {
+            progressDialog.showDialog(); // Показываем загрузку, пока ждем рекламу
+            final AdRequestConfiguration adRequestConfiguration =
+                    new AdRequestConfiguration.Builder(AdsConfig.rewardedAdsId).build();
+            mRewardedAdLoader.loadAd(adRequestConfiguration);
+        } else {
+            saveDrawing();
+        }
     }
 
     private void askPermissions() {
@@ -308,36 +235,27 @@ public class DrawActivity extends AppCompatActivity {
                 .withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .withListener(new PermissionListener() {
                     @Override
-                    public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
-                        if (mRewardedAdLoader != null) {
-                            final AdRequestConfiguration adRequestConfiguration =
-                                    new AdRequestConfiguration.Builder(AdsConfig.rewardedAdsId).build();
-                            mRewardedAdLoader.loadAd(adRequestConfiguration);
-                        }
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        startAdAndSaveFlow();
                     }
 
                     @Override
-                    public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse) {
-
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        Toast.makeText(DrawActivity.this, "Требуется разрешение для сохранения", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken) {
-                        permissionToken.continuePermissionRequest();
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest request, PermissionToken token) {
+                        token.continuePermissionRequest();
                     }
-                })
-                .check();
+                }).check();
     }
 
     private void openColorPicker(SignaturePad signatureView) {
         AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(DrawActivity.this,
-                ContextCompat.getColor(DrawActivity.this, R.color.white),
+                defaultColor,
                 new AmbilWarnaDialog.OnAmbilWarnaListener() {
-                    @Override
-                    public void onCancel(AmbilWarnaDialog dialog) {
-
-                    }
-
+                    @Override public void onCancel(AmbilWarnaDialog dialog) {}
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
                         defaultColor = color;
@@ -348,26 +266,67 @@ public class DrawActivity extends AppCompatActivity {
     }
 
     private void saveImage(Bitmap bitmap, String fileName) throws IOException {
-        File path = new File(DrawActivity.this.getFilesDir(), "Рисовалка" + File.separator + "images");
-        if (!path.exists()) {
-            path.mkdirs();
+        // 1. Сохранение во внутреннюю память приложения (как было у вас, не требует разрешений)
+        File internalPath = new File(DrawActivity.this.getFilesDir(), "Рисовалка" + File.separator + "images");
+        if (!internalPath.exists()) {
+            internalPath.mkdirs();
         }
-        File outFile = new File(path, fileName + ".jpeg");
+        File outFile = new File(internalPath, fileName + ".jpeg");
         FileOutputStream fos = new FileOutputStream(outFile);
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
         fos.flush();
         fos.close();
-        MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, fileName, "");
 
+        // 2. Современное сохранение в публичную Галерею (MediaStore)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName + ".jpeg");
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Рисовалка");
+            values.put(MediaStore.Images.Media.IS_PENDING, 1);
+
+            ContentResolver resolver = getContentResolver();
+            Uri collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+            Uri itemUri = resolver.insert(collection, values);
+
+            if (itemUri != null) {
+                try (OutputStream out = resolver.openOutputStream(itemUri)) {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                }
+                values.clear();
+                values.put(MediaStore.Images.Media.IS_PENDING, 0);
+                resolver.update(itemUri, values, null, null);
+            }
+        } else {
+            // Устаревший метод для Android 9 и ниже
+            MediaStore.Images.Media.insertImage(getContentResolver(), outFile.getAbsolutePath(), fileName, "");
+        }
+
+        // 3. Сохраняем в ваш текстовый список
         addToList(outFile);
     }
 
     private void addToList(File filePath) throws IOException {
-        String string = filePath.getPath();
-        string = string + "\n";
+        String string = filePath.getPath() + "\n";
         FileOutputStream fileOutputStream = openFileOutput("images", MODE_APPEND);
         fileOutputStream.write(string.getBytes(StandardCharsets.UTF_8));
         fileOutputStream.flush();
         fileOutputStream.close();
+    }
+
+    private void saveDrawing() {
+        try {
+            saveImage(signatureView.getSignatureBitmap(), date);
+            Snackbar.make(linearLayout, "Сохранено!", Snackbar.LENGTH_SHORT)
+                    .setTextColor(Color.WHITE)
+                    .setBackgroundTint(Color.parseColor("#95D61D"))
+                    .show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Snackbar.make(linearLayout, "Ошибка сохранения: " + e.getMessage(), Snackbar.LENGTH_SHORT)
+                    .setTextColor(Color.WHITE)
+                    .setBackgroundTint(Color.RED)
+                    .show();
+        }
     }
 }
