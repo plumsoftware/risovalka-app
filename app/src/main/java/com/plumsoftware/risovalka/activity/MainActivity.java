@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 
 import com.plumsoftware.risovalka.R;
@@ -19,13 +20,13 @@ import com.yandex.mobile.ads.appopenad.AppOpenAdEventListener;
 import com.yandex.mobile.ads.appopenad.AppOpenAdLoadListener;
 import com.yandex.mobile.ads.appopenad.AppOpenAdLoader;
 import com.yandex.mobile.ads.common.AdError;
-import com.yandex.mobile.ads.common.AdRequestConfiguration;
+import com.yandex.mobile.ads.common.AdRequest;
 import com.yandex.mobile.ads.common.AdRequestError;
 import com.yandex.mobile.ads.common.ImpressionData;
-import com.yandex.mobile.ads.common.MobileAds;
 
 public class MainActivity extends AppCompatActivity {
     private AppOpenAd mAppOpenAd = null;
+    private AppOpenAdLoader mAppOpenAdLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,73 +49,52 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        MobileAds.initialize(this, () -> {
-            final AppOpenAdLoader appOpenAdLoader = new AppOpenAdLoader(this);
-            final String AD_UNIT_ID = AdsConfig.openAdsId;
-            final AdRequestConfiguration adRequestConfiguration = new AdRequestConfiguration.Builder(AD_UNIT_ID).build();
+        mAppOpenAdLoader = new AppOpenAdLoader(this);
+        final AdRequest adRequest = new AdRequest.Builder(AdsConfig.openAdsId).build();
+        mAppOpenAdLoader.loadAd(adRequest, new AppOpenAdLoadListener() {
+            @Override
+            public void onAdLoaded(@NonNull final AppOpenAd appOpenAd) {
+                mAppOpenAd = appOpenAd;
+                mAppOpenAd.setAdEventListener(new AppOpenAdEventListener() {
+                    @Override
+                    public void onAdShown() {}
 
-            AppOpenAdEventListener appOpenAdEventListener = new AppOpenAdEventListener() {
-                @Override
-                public void onAdShown() {
-                    // Called when ad is shown.
-                }
+                    @Override
+                    public void onAdFailedToShow(@NonNull final AdError adError) {}
 
-                @Override
-                public void onAdFailedToShow(@NonNull final AdError adError) {
-                    // Called when ad failed to show.
-                }
+                    @Override
+                    public void onAdDismissed() {
+                        clearAppOpenAd();
+                    }
 
-                @Override
-                public void onAdDismissed() {
-                    // Called when ad is dismissed.
-                    // Clean resources after dismiss and preload new ad.
-                    clearAppOpenAd();
-//                showAppOpenAd();
-                }
+                    @Override
+                    public void onAdClicked() {}
 
-                @Override
-                public void onAdClicked() {
-                    // Called when a click is recorded for an ad.
-                }
+                    @Override
+                    public void onAdImpression(@Nullable final ImpressionData impressionData) {}
+                });
 
-                @Override
-                public void onAdImpression(@Nullable final ImpressionData impressionData) {
-                    // Called when an impression is recorded for an ad.
-                }
-            };
+                startActivity(new Intent(MainActivity.this, DrawActivity.class));
+                finish();
+                showAppOpenAd();
+            }
 
-            AppOpenAdLoadListener appOpenAdLoadListener = new AppOpenAdLoadListener() {
-                @Override
-                public void onAdLoaded(@NonNull final AppOpenAd appOpenAd) {
-                    // The ad was loaded successfully. Now you can show loaded ad.
-                    mAppOpenAd = appOpenAd;
-                    mAppOpenAd.setAdEventListener(appOpenAdEventListener);
-
+            @Override
+            public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     startActivity(new Intent(MainActivity.this, DrawActivity.class));
                     finish();
-
-                    showAppOpenAd();
-
-                }
-
-                @Override
-                public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            startActivity(new Intent(MainActivity.this, DrawActivity.class));
-                            finish();
-                        }
-                    }, 1300);
-                }
-            };
-
-            appOpenAdLoader.setAdLoadListener(appOpenAdLoadListener);
-
-            appOpenAdLoader.loadAd(adRequestConfiguration);
+                }, 1300);
+            }
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        mAppOpenAdLoader = null;
+        clearAppOpenAd();
+        super.onDestroy();
+    }
 
     private void showAppOpenAd() {
         if (mAppOpenAd != null) {
