@@ -19,11 +19,10 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -48,10 +47,8 @@ import com.yandex.mobile.ads.banner.BannerAdSize;
 import com.yandex.mobile.ads.banner.BannerAdView;
 import com.yandex.mobile.ads.common.AdError;
 import com.yandex.mobile.ads.common.AdRequest;
-import com.yandex.mobile.ads.common.AdRequestConfiguration;
 import com.yandex.mobile.ads.common.AdRequestError;
 import com.yandex.mobile.ads.common.ImpressionData;
-import com.yandex.mobile.ads.common.MobileAds;
 import com.yandex.mobile.ads.rewarded.Reward;
 import com.yandex.mobile.ads.rewarded.RewardedAd;
 import com.yandex.mobile.ads.rewarded.RewardedAdEventListener;
@@ -78,13 +75,13 @@ public class DrawActivity extends AppCompatActivity {
     private FirebaseAnalytics mFirebaseAnalytics;
 
     @Nullable
+    private BannerAdView mBannerAdView;
+    @Nullable
     private RewardedAd mRewardedAd = null;
     @Nullable
     private RewardedAdLoader mRewardedAdLoader = null;
 
     private ProgressDialog progressDialog = null;
-
-    private final double TABLET_SCREEN_SIZE_THRESHOLD = 7.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,78 +96,15 @@ public class DrawActivity extends AppCompatActivity {
             return insets;
         });
 
-        //Data
         defaultColor = ContextCompat.getColor(DrawActivity.this, R.color.black);
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int screenWidth = displayMetrics.widthPixels;
-        int screenHeight = displayMetrics.heightPixels;
 
-        double screenInches = Math.sqrt(Math.pow(screenWidth / displayMetrics.xdpi, 2) +
-                Math.pow(screenHeight / displayMetrics.ydpi, 2));
-
-        int bannerHeight = (screenInches >= TABLET_SCREEN_SIZE_THRESHOLD) ?
-                (int) (screenHeight * 0.08) : (int) (screenHeight * 0.036);
-
-        // Инициализация диалога загрузки
         progressDialog = new ProgressDialog(DrawActivity.this);
 
-        //Ads
-        MobileAds.initialize(this, () -> {
-            BannerAdView mBannerAdView = findViewById(R.id.adView);
-            mBannerAdView.setAdUnitId(AdsConfig.bannerAdsId); // Убедитесь, что AdsConfig берется правильно
-            mBannerAdView.setAdSize(BannerAdSize.inlineSize(this, screenWidth, bannerHeight));
-
-            final AdRequest adRequest = new AdRequest.Builder().build();
-            mBannerAdView.setBannerAdEventListener(new BannerAdEventListener() {
-                @Override public void onAdLoaded() {}
-                @Override public void onAdFailedToLoad(@NonNull AdRequestError error) {}
-                @Override public void onAdClicked() {}
-                @Override public void onLeftApplication() {}
-                @Override public void onReturnedToApplication() {}
-                @Override public void onImpression(@Nullable ImpressionData data) {}
-            });
-            mBannerAdView.loadAd(adRequest);
-
-            //Rewarded Loader
-            mRewardedAdLoader = new RewardedAdLoader(DrawActivity.this);
-            mRewardedAdLoader.setAdLoadListener(new RewardedAdLoadListener() {
-                @Override
-                public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
-                    mRewardedAd = rewardedAd;
-                    if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
-
-                    mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
-                        @Override public void onAdShown() {}
-                        @Override
-                        public void onAdFailedToShow(@NonNull AdError adError) {
-                            if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
-                            saveDrawing();
-                        }
-                        @Override
-                        public void onAdDismissed() {}
-                        @Override public void onAdClicked() {}
-                        @Override public void onAdImpression(@Nullable ImpressionData impressionData) {}
-                        @Override
-                        public void onRewarded(@NonNull Reward reward) {
-                            saveDrawing();
-                        }
-                    });
-
-                    mRewardedAd.show(DrawActivity.this);
-                }
-
-                @Override
-                public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                    if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
-                    saveDrawing(); // Сохраняем без рекламы, если не загрузилась
-                }
-            });
-        });
+        mRewardedAdLoader = new RewardedAdLoader(this);
+        setupStickyBanner();
 
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
-        // FVBI
         ImageButton rubber = findViewById(R.id.imageButton);
         ImageButton paintPicker = findViewById(R.id.imageButton2);
         ImageButton save = findViewById(R.id.save);
@@ -197,15 +131,12 @@ public class DrawActivity extends AppCompatActivity {
 
         save.setOnClickListener(view -> {
             if (!signatureView.isEmpty()) {
-                // Обновляем имя файла прямо перед сохранением
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
                 date = simpleDateFormat.format(new Date());
 
-                // На Android 10+ (API 29+) WRITE_EXTERNAL_STORAGE не нужен для записи в Галерею
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startAdAndSaveFlow();
                 } else {
-                    // Для старых версий запрашиваем разрешение
                     if (ContextCompat.checkSelfPermission(DrawActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             == PackageManager.PERMISSION_GRANTED) {
                         startAdAndSaveFlow();
@@ -219,14 +150,117 @@ public class DrawActivity extends AppCompatActivity {
         });
     }
 
+    private void setupStickyBanner() {
+        final BannerAdView bannerAdView = findViewById(R.id.adView);
+        bannerAdView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                bannerAdView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                loadStickyBanner(bannerAdView);
+            }
+        });
+    }
+
+    private void loadStickyBanner(@NonNull final BannerAdView bannerAdView) {
+        mBannerAdView = bannerAdView;
+        final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int adWidthPixels = bannerAdView.getWidth();
+        if (adWidthPixels == 0) {
+            adWidthPixels = displayMetrics.widthPixels;
+        }
+        final int adWidth = Math.round(adWidthPixels / displayMetrics.density);
+
+        bannerAdView.setAdSize(BannerAdSize.sticky(this, adWidth));
+        bannerAdView.setBannerAdEventListener(new BannerAdEventListener() {
+            @Override
+            public void onAdLoaded() {
+                if (isDestroyed() && mBannerAdView != null) {
+                    mBannerAdView.destroy();
+                }
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull AdRequestError error) {}
+
+            @Override
+            public void onAdClicked() {}
+
+            @Override
+            public void onImpression(@Nullable ImpressionData data) {}
+        });
+        bannerAdView.loadAd(new AdRequest.Builder(AdsConfig.bannerAdsId).build());
+    }
+
     private void startAdAndSaveFlow() {
         if (mRewardedAdLoader != null) {
-            progressDialog.showDialog(); // Показываем загрузку, пока ждем рекламу
-            final AdRequestConfiguration adRequestConfiguration =
-                    new AdRequestConfiguration.Builder(AdsConfig.rewardedAdsId).build();
-            mRewardedAdLoader.loadAd(adRequestConfiguration);
+            progressDialog.showDialog();
+            final AdRequest adRequest = new AdRequest.Builder(AdsConfig.rewardedAdsId).build();
+            mRewardedAdLoader.loadAd(adRequest, new RewardedAdLoadListener() {
+                @Override
+                public void onAdLoaded(@NonNull final RewardedAd rewardedAd) {
+                    mRewardedAd = rewardedAd;
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+
+                    mRewardedAd.setAdEventListener(new RewardedAdEventListener() {
+                        @Override public void onAdShown() {}
+
+                        @Override
+                        public void onAdFailedToShow(@NonNull AdError adError) {
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                            destroyRewardedAd();
+                            saveDrawing();
+                        }
+
+                        @Override
+                        public void onAdDismissed() {
+                            destroyRewardedAd();
+                        }
+
+                        @Override public void onAdClicked() {}
+
+                        @Override public void onAdImpression(@Nullable ImpressionData impressionData) {}
+
+                        @Override
+                        public void onRewarded(@NonNull Reward reward) {
+                            saveDrawing();
+                        }
+                    });
+
+                    mRewardedAd.show(DrawActivity.this);
+                }
+
+                @Override
+                public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
+                    if (progressDialog != null && progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    saveDrawing();
+                }
+            });
         } else {
             saveDrawing();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mBannerAdView != null) {
+            mBannerAdView.destroy();
+            mBannerAdView = null;
+        }
+        mRewardedAdLoader = null;
+        destroyRewardedAd();
+        super.onDestroy();
+    }
+
+    private void destroyRewardedAd() {
+        if (mRewardedAd != null) {
+            mRewardedAd.setAdEventListener(null);
+            mRewardedAd = null;
         }
     }
 
@@ -266,7 +300,6 @@ public class DrawActivity extends AppCompatActivity {
     }
 
     private void saveImage(Bitmap bitmap, String fileName) throws IOException {
-        // 1. Сохранение во внутреннюю память приложения (как было у вас, не требует разрешений)
         File internalPath = new File(DrawActivity.this.getFilesDir(), "Рисовалка" + File.separator + "images");
         if (!internalPath.exists()) {
             internalPath.mkdirs();
@@ -277,7 +310,6 @@ public class DrawActivity extends AppCompatActivity {
         fos.flush();
         fos.close();
 
-        // 2. Современное сохранение в публичную Галерею (MediaStore)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName + ".jpeg");
@@ -298,11 +330,9 @@ public class DrawActivity extends AppCompatActivity {
                 resolver.update(itemUri, values, null, null);
             }
         } else {
-            // Устаревший метод для Android 9 и ниже
             MediaStore.Images.Media.insertImage(getContentResolver(), outFile.getAbsolutePath(), fileName, "");
         }
 
-        // 3. Сохраняем в ваш текстовый список
         addToList(outFile);
     }
 
