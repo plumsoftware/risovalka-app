@@ -18,4 +18,22 @@
     <color name="warning">#FFD000</color>
     <color name="danger">#FF7835</color>
     <color name="dark_gray">#DADADA</color>
+
+    <color name="bg_playful">#FFF6E9</color>
+    <color name="kids_purple">#8E6BFF</color>
+    <color name="kids_purple_dark">#6C4EDB</color>
+    <color name="kids_yellow">#3C94FF</color>
+    <color name="kids_yellow_light">#8AAFFF</color>
+    <color name="kids_pink">#FF6FA5</color>
+
+    <!-- Палитра быстрых цветов для детей -->
+    <color name="swatch_red">#FF4B4B</color>
+    <color name="swatch_orange">#FF9A3C</color>
+    <color name="swatch_yellow">#FFD93C</color>
+    <color name="swatch_green">#4CD964</color>
+    <color name="swatch_blue">#3CA7FF</color>
+    <color name="swatch_purple">#A463F2</color>
+    <color name="swatch_pink">#FF6FA5</color>
+    <color name="swatch_brown">#A9744F</color>
+    <color name="swatch_black">#222222</color>
 </resources>

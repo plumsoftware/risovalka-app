@@ -21,10 +21,10 @@ android {
 
     defaultConfig {
         applicationId "com.plumsoftware.risovalka"
-        minSdk 25
+        minSdk 26
         targetSdk 36
-        versionCode 31
-        versionName "3.1.4"
+        versionCode 32
+        versionName "3.1.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -84,5 +84,5 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.5'
 
     //Yandex ads
-    implementation 'com.yandex.android:mobileads:8.1.0'
+    implementation 'com.yandex.android:mobileads:8.2.0'
 }
