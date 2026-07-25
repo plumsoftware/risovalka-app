@@ -5,131 +5,279 @@
     android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/bg_playful"
     android:orientation="vertical"
-    tools:context=".activity.MainActivity">
+    tools:context=".activity.DrawActivity">
 
+    <!-- Верхняя весёлая панель -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0"
+        android:layout_height="80dp"
         android:background="@color/blue_dark"
+        android:gravity="center|bottom"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp">
 
         <ImageButton
             android:id="@+id/back"
-            android:layout_width="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/btn_playful_bg"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/exit" />
+
+        <TextView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
-            android:layout_weight="0"
-            android:background="@drawable/btn_background"
-            android:padding="6dp"
-            app:srcCompat="@drawable/ic_arrow_back" />
+            android:layout_weight="1"
+            android:gravity="center"
+            android:fontFamily="@font/vag_world_bold"
+            android:text="Рисовалка"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
+
+        <!-- пустое место для симметрии с кнопкой назад -->
+        <View
+            android:layout_width="48dp"
+            android:layout_height="48dp" />
     </LinearLayout>
 
-    <com.github.gcacace.signaturepad.views.SignaturePad
-        android:id="@+id/signatureView"
+    <!-- Холст в виде "листа бумаги" на цветном фоне -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="12dp"
         android:layout_weight="1"
-        app:backgroundColor="#ffffff"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:penColor="#000000" />
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp">
 
+        <com.plumsoftware.risovalka.components.DrawingView
+            android:id="@+id/signatureView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Быстрый выбор цвета -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="4dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/colorSwatchRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Открыть полный выбор цвета -->
+            <ImageButton
+                android:id="@+id/imageButton2"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/btn_playful_bg"
+                android:padding="6dp"
+                app:srcCompat="@drawable/ic_paint_palette" />
+
+            <View
+                android:id="@+id/swatchRed"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_red"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchOrange"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_orange"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchYellow"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_yellow"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchGreen"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_green"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchBlue"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_blue"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchPurple"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_purple"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchPink"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_pink"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchBrown"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_brown"
+                android:tag="pick_color" />
+
+            <View
+                android:id="@+id/swatchBlack"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/swatch_circle"
+                android:backgroundTint="@color/swatch_black"
+                android:tag="pick_color" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Выбор стиля кисти -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="6dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/brushRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/brushPencil"
+                style="@style/BrushChip"
+                android:text="✏️ Карандаш" />
+
+            <TextView
+                android:id="@+id/brushMarker"
+                style="@style/BrushChip"
+                android:text="🖊️ Маркер" />
+
+            <TextView
+                android:id="@+id/brushNeon"
+                style="@style/BrushChip"
+                android:text="✨ Неон" />
+
+            <TextView
+                android:id="@+id/brushRainbow"
+                style="@style/BrushChip"
+                android:text="🌈 Радуга" />
+
+            <TextView
+                android:id="@+id/brushSpray"
+                style="@style/BrushChip"
+                android:text="💨 Спрей" />
+
+            <TextView
+                android:id="@+id/brushDotted"
+                style="@style/BrushChip"
+                android:text="⚬⚬ Пунктир" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Нижняя панель: толщина, ластик, цвет холста, сохранить -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/blue_dark"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp"
         android:weightSum="8">
 
         <SeekBar
             android:id="@+id/seekBar"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="4dp"
             android:layout_weight="4"
             android:max="50"
-            android:progress="5" />
+            android:progress="8"
+            android:progressTint="@color/kids_yellow"
+            android:thumbTint="@color/kids_yellow" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:padding="4dp"
-                android:text="5"
-                android:textColor="@color/gray"
-                android:textSize="14sp" />
-
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginLeft="4dp"
-                android:layout_marginTop="4dp"
-                android:layout_marginRight="4dp"
-                android:layout_marginBottom="4dp"
-                android:background="@drawable/btn_background"
-                android:padding="4dp"
-                app:srcCompat="@drawable/ic_art_and_design" />
-        </LinearLayout>
+            android:background="@drawable/swatch_circle"
+            android:backgroundTint="@color/kids_yellow"
+            android:fontFamily="@font/baloo_chettan"
+            android:gravity="center"
+            android:padding="6dp"
+            android:text="8"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
 
         <ImageButton
             android:id="@+id/imageButton"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginLeft="4dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/click"
-            android:padding="4dp"
+            android:background="@drawable/btn_playful_bg"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_rubber" />
 
         <ImageButton
-            android:id="@+id/imageButton2"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginLeft="4dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginBottom="4dp"
+            android:id="@+id/canvasColorButton"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/click"
-            android:padding="4dp"
-            app:srcCompat="@drawable/ic_paint_palette" />
+            android:background="@drawable/btn_playful_bg"
+            android:contentDescription="Цвет холста"
+            android:padding="8dp"
+            app:srcCompat="@drawable/ic_art_and_design" />
 
         <ImageButton
             android:id="@+id/save"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginLeft="4dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginRight="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:background="@drawable/click"
-            android:padding="4dp"
+            android:background="@drawable/btn_playful_bg"
+            android:padding="8dp"
             app:srcCompat="@drawable/ic_save" />
     </LinearLayout>
 
@@ -138,7 +286,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="?attr/colorPrimaryVariant"
-        android:foregroundGravity="center"
         android:gravity="center">
 
         <com.yandex.mobile.ads.banner.BannerAdView

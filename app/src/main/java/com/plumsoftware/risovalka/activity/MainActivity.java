@@ -49,44 +49,47 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        mAppOpenAdLoader = new AppOpenAdLoader(this);
-        final AdRequest adRequest = new AdRequest.Builder(AdsConfig.openAdsId).build();
-        mAppOpenAdLoader.loadAd(adRequest, new AppOpenAdLoadListener() {
-            @Override
-            public void onAdLoaded(@NonNull final AppOpenAd appOpenAd) {
-                mAppOpenAd = appOpenAd;
-                mAppOpenAd.setAdEventListener(new AppOpenAdEventListener() {
-                    @Override
-                    public void onAdShown() {}
+        startActivity(new Intent(MainActivity.this, DrawActivity.class));
+        finish();
 
-                    @Override
-                    public void onAdFailedToShow(@NonNull final AdError adError) {}
-
-                    @Override
-                    public void onAdDismissed() {
-                        clearAppOpenAd();
-                    }
-
-                    @Override
-                    public void onAdClicked() {}
-
-                    @Override
-                    public void onAdImpression(@Nullable final ImpressionData impressionData) {}
-                });
-
-                startActivity(new Intent(MainActivity.this, DrawActivity.class));
-                finish();
-                showAppOpenAd();
-            }
-
-            @Override
-            public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    startActivity(new Intent(MainActivity.this, DrawActivity.class));
-                    finish();
-                }, 1300);
-            }
-        });
+//        mAppOpenAdLoader = new AppOpenAdLoader(this);
+//        final AdRequest adRequest = new AdRequest.Builder(AdsConfig.openAdsId).build();
+//        mAppOpenAdLoader.loadAd(adRequest, new AppOpenAdLoadListener() {
+//            @Override
+//            public void onAdLoaded(@NonNull final AppOpenAd appOpenAd) {
+//                mAppOpenAd = appOpenAd;
+//                mAppOpenAd.setAdEventListener(new AppOpenAdEventListener() {
+//                    @Override
+//                    public void onAdShown() {}
+//
+//                    @Override
+//                    public void onAdFailedToShow(@NonNull final AdError adError) {}
+//
+//                    @Override
+//                    public void onAdDismissed() {
+//                        clearAppOpenAd();
+//                    }
+//
+//                    @Override
+//                    public void onAdClicked() {}
+//
+//                    @Override
+//                    public void onAdImpression(@Nullable final ImpressionData impressionData) {}
+//                });
+//
+//                startActivity(new Intent(MainActivity.this, DrawActivity.class));
+//                finish();
+//                showAppOpenAd();
+//            }
+//
+//            @Override
+//            public void onAdFailedToLoad(@NonNull final AdRequestError adRequestError) {
+//                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+//                    startActivity(new Intent(MainActivity.this, DrawActivity.class));
+//                    finish();
+//                }, 1300);
+//            }
+//        });
     }
 
     @Override

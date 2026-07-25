@@ -40,6 +40,7 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.plumsoftware.risovalka.ads.AdsConfig;
+import com.plumsoftware.risovalka.components.DrawingView;
 import com.plumsoftware.risovalka.dialog.ProgressDialog;
 import com.plumsoftware.risovalka.R;
 import com.yandex.mobile.ads.banner.BannerAdEventListener;
@@ -61,15 +62,18 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 
 public class DrawActivity extends AppCompatActivity {
+
     private int defaultColor;
     private final File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Рисовалка");
-    private SignaturePad signatureView;
+    private DrawingView signatureView; // теперь наш кастомный холст, имя поля не менял, чтобы меньше править ниже
     private String date;
     private LinearLayout linearLayout;
     private FirebaseAnalytics mFirebaseAnalytics;
@@ -82,6 +86,8 @@ public class DrawActivity extends AppCompatActivity {
     private RewardedAdLoader mRewardedAdLoader = null;
 
     private ProgressDialog progressDialog = null;
+
+    private final List<TextView> brushChips = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,23 +113,36 @@ public class DrawActivity extends AppCompatActivity {
 
         ImageButton rubber = findViewById(R.id.imageButton);
         ImageButton paintPicker = findViewById(R.id.imageButton2);
+        ImageButton canvasColorButton = findViewById(R.id.canvasColorButton);
         ImageButton save = findViewById(R.id.save);
         ImageButton back = findViewById(R.id.back);
         final TextView size = findViewById(R.id.textView);
         SeekBar paintSize = findViewById(R.id.seekBar);
         signatureView = findViewById(R.id.signatureView);
         signatureView.setSaveEnabled(false);
+        signatureView.setPenColor(defaultColor);
+        signatureView.setStrokeWidth(paintSize.getProgress());
 
-        paintPicker.setOnClickListener(view -> openColorPicker(signatureView));
+        paintPicker.setOnClickListener(view -> openColorPicker(color -> {
+            defaultColor = color;
+            signatureView.setPenColor(color);
+        }, defaultColor));
+
+        canvasColorButton.setOnClickListener(view -> openColorPicker(color ->
+                signatureView.setCanvasColor(color), signatureView.getCanvasColor()));
+
         back.setOnClickListener(v -> finish());
         rubber.setOnClickListener(view -> signatureView.clear());
+
+        setupQuickColorSwatches();
+        setupBrushStyleChips();
 
         paintSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @SuppressLint("SetTextI18n")
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 size.setText(Integer.toString(progress));
-                signatureView.setMaxWidth(progress);
+                signatureView.setStrokeWidth(progress);
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
@@ -146,6 +165,52 @@ public class DrawActivity extends AppCompatActivity {
                 }
             } else {
                 Toast.makeText(DrawActivity.this, "Невозможно сохранить пустой холст.", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    /** Круглые заготовки быстрого выбора цвета — привычный для детей способ, без диалога. */
+    private void setupQuickColorSwatches() {
+        int[] swatchIds = new int[]{
+                R.id.swatchRed, R.id.swatchOrange, R.id.swatchYellow, R.id.swatchGreen,
+                R.id.swatchBlue, R.id.swatchPurple, R.id.swatchPink, R.id.swatchBrown, R.id.swatchBlack
+        };
+        for (int id : swatchIds) {
+            View swatch = findViewById(id);
+            if (swatch == null) continue;
+            swatch.setOnClickListener(v -> {
+                android.content.res.ColorStateList tint = v.getBackgroundTintList();
+                if (tint != null) {
+                    int color = tint.getDefaultColor();
+                    defaultColor = color;
+                    signatureView.setPenColor(color);
+                }
+            });
+        }
+    }
+
+    /** Ряд чипов со стилями кисти: карандаш / маркер / неон / радуга / спрей / пунктир. */
+    private void setupBrushStyleChips() {
+        addBrushChip(R.id.brushPencil, DrawingView.BrushType.PENCIL);
+        addBrushChip(R.id.brushMarker, DrawingView.BrushType.MARKER);
+        addBrushChip(R.id.brushNeon, DrawingView.BrushType.NEON);
+        addBrushChip(R.id.brushRainbow, DrawingView.BrushType.RAINBOW);
+        addBrushChip(R.id.brushSpray, DrawingView.BrushType.SPRAY);
+        addBrushChip(R.id.brushDotted, DrawingView.BrushType.DOTTED);
+
+        if (!brushChips.isEmpty()) {
+            brushChips.get(0).setSelected(true); // карандаш выбран по умолчанию
+        }
+    }
+
+    private void addBrushChip(int viewId, DrawingView.BrushType type) {
+        TextView chip = findViewById(viewId);
+        if (chip == null) return;
+        brushChips.add(chip);
+        chip.setOnClickListener(v -> {
+            signatureView.setBrushType(type);
+            for (TextView other : brushChips) {
+                other.setSelected(other == chip);
             }
         });
     }
@@ -285,15 +350,20 @@ public class DrawActivity extends AppCompatActivity {
                 }).check();
     }
 
-    private void openColorPicker(SignaturePad signatureView) {
+    /** Небольшой функциональный интерфейс, чтобы переиспользовать один и тот же диалог
+     *  и для цвета кисти, и для цвета холста. */
+    private interface OnColorPicked {
+        void onColor(int color);
+    }
+
+    private void openColorPicker(OnColorPicked callback, int initialColor) {
         AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(DrawActivity.this,
-                defaultColor,
+                initialColor,
                 new AmbilWarnaDialog.OnAmbilWarnaListener() {
                     @Override public void onCancel(AmbilWarnaDialog dialog) {}
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
-                        defaultColor = color;
-                        signatureView.setPenColor(color);
+                        callback.onColor(color);
                     }
                 });
         ambilWarnaDialog.show();
